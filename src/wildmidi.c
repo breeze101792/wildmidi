@@ -232,7 +232,7 @@ static int write_midi_output(void *output_data, int output_size) {
         return (-1);
 
 /*
- * Test if file already exists 
+ * Test if file already exists
  */
 #ifdef __DJGPP__
     if (findfirst(midi_file, &f, FA_ARCH | FA_RDONLY) == 0) {
@@ -1175,6 +1175,7 @@ int main(int argc, char **argv) {
                 &option_index);
         if (i == -1)
             break;
+        printf("%c", i);
         switch (i) {
         case 'v': /* Version */
             return (0);
@@ -1346,14 +1347,18 @@ int main(int argc, char **argv) {
 
     WildMidi_MasterVolume(master_volume);
 
+    int test = 0;
+    int32_t shift = 0;
+    int tempo_dir = 0;
     while (optind < argc || test_midi) {
+
         WildMidi_ClearError();
         if (!test_midi) {
             const char *real_file = FIND_LAST_DIRSEP(argv[optind]);
-
             if (!real_file) real_file = argv[optind];
             else real_file++;
             printf("\rPlaying %s ", real_file);
+            test = optind;
 
             midi_ptr = WildMidi_Open(argv[optind]);
             optind++;
@@ -1446,6 +1451,12 @@ int main(int argc, char **argv) {
                         break;
                 case 'n':
                     goto NEXTMIDI;
+                case 'u':
+                    tempo_dir = 1;
+                    goto TEMPOUP;
+                case 'd':
+                    tempo_dir = 0;
+                    goto TEMPOUP;
                 case 'p':
                     if (inpause) {
                         inpause = 0;
@@ -1537,7 +1548,7 @@ int main(int argc, char **argv) {
                     mixer_options ^= WM_MO_LOOP;
                     modes[3] = (mixer_options & WM_MO_LOOP)? 'o' : ' ';
                     break;
-    
+
                 default:
                     break;
                 }
@@ -1597,6 +1608,13 @@ int main(int argc, char **argv) {
                 goto end2;
             }
         }
+        TEMPOUP:
+        optind = test;
+        if (tempo_dir)
+          shift += 100000L;
+        else
+          shift -= 100000L;
+        WildMidi_SetTempoShift(shift);
         NEXTMIDI: fprintf(stderr, "\r\n");
         if (WildMidi_Close(midi_ptr) == -1) {
             ret_err = WildMidi_GetError();

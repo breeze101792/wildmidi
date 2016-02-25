@@ -80,6 +80,7 @@ uint16_t _WM_MixerOptions = 0;
 
 uint16_t _WM_SampleRate;
 int16_t _WM_MasterVolume;
+static int32_t _WM_TempoShift = 0;
 
 /* when converting files to midi */
 typedef struct _cvt_options {
@@ -257,6 +258,10 @@ static void WM_FreePatches(void) {
         }
     }
     _WM_Unlock(&_WM_patch_lock);
+}
+WM_SYMBOL void WildMidi_SetTempoShift (int32_t i) {
+    _WM_TempoShift =+ i;
+
 }
 
 /* wm_strdup -- adds extra space for appending up to 4 chars */
@@ -1649,7 +1654,7 @@ WM_SYMBOL midi *WildMidi_Open(const char *midifile) {
     } else if (memcmp(mididata, xmi_hdr, 4) == 0) {
         ret = (void *) _WM_ParseNewXmi(mididata, midisize);
     } else {
-        ret = (void *) _WM_ParseNewMidi(mididata, midisize);
+        ret = (void *) _WM_ParseNewMidi(mididata, midisize, _WM_TempoShift);
     }
     free(mididata);
 
@@ -1692,7 +1697,7 @@ WM_SYMBOL midi *WildMidi_OpenBuffer(uint8_t *midibuffer, uint32_t size) {
     } else if (memcmp(midibuffer, xmi_hdr, 4) == 0) {
         ret = (void *) _WM_ParseNewXmi(midibuffer, size);
     } else {
-        ret = (void *) _WM_ParseNewMidi(midibuffer, size);
+        ret = (void *) _WM_ParseNewMidi(midibuffer, size, _WM_TempoShift);
     }
 
     if (ret) {
@@ -1831,7 +1836,7 @@ WM_SYMBOL int WildMidi_SongSeek (midi * handle, int8_t nextsong) {
          * So with this one we have to go back 2 eof's
          * then forward 1 event to get to the start of
          * the previous song.
-         * NOTE: We will automatically stop at the start 
+         * NOTE: We will automatically stop at the start
          * of the data.
          */
         uint8_t eof_cnt = 1;
@@ -2131,4 +2136,3 @@ WM_SYMBOL void WildMidi_ClearError (void) {
     }
     return;
 }
-

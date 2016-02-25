@@ -95,6 +95,7 @@ struct _WM_Info {
 };
 
 typedef void midi;
+WM_SYMBOL void WildMidi_SetTempoShift (int32_t i);
 
 WM_SYMBOL const char * WildMidi_GetString (uint16_t info);
 WM_SYMBOL long WildMidi_GetVersion (void);

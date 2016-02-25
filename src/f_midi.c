@@ -38,7 +38,7 @@
 
 
 struct _mdi *
-_WM_ParseNewMidi(uint8_t *midi_data, uint32_t midi_size) {
+_WM_ParseNewMidi(uint8_t *midi_data, uint32_t midi_size, int32_t tempo_shift) {
     struct _mdi *mdi;
 
     uint32_t tmp_val;
@@ -49,7 +49,7 @@ _WM_ParseNewMidi(uint8_t *midi_data, uint32_t midi_size) {
     uint32_t no_tracks;
     uint32_t i;
     uint32_t divisions = 96;
-    uint32_t tempo = 500000;
+    uint32_t tempo = 500000 + tempo_shift;
     float samples_per_delta_f = 0.0;
 
     uint32_t sample_count = 0;
@@ -264,10 +264,11 @@ _WM_ParseNewMidi(uint8_t *midi_data, uint32_t midi_size) {
                             goto NEXT_TRACK;
                         } else if ((tracks[i][0] == 0xff) && (tracks[i][1] == 0x51) && (tracks[i][2] == 0x03)) {
                             /* Tempo */
-                            tempo = (tracks[i][3] << 16) + (tracks[i][4] << 8)+ tracks[i][5];
+                            tempo = (tracks[i][3] << 16) + (tracks[i][4] << 8)+ tracks[i][5] + tempo_shift;
                             if (!tempo)
-                                tempo = 500000;
-
+                                tempo = 500000 + tempo_shift;
+                            printf("tempo = %i-> %i", tempo, tempo_shift);
+                            printf(" -- %i" , sizeof(int32_t));
                             samples_per_delta_f = _WM_GetSamplesPerTick(divisions, tempo);
                         }
                     }
